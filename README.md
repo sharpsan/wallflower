@@ -87,6 +87,23 @@ void wallpaperMain() => runWallpaper(const MyScene());
 **4. Let users set it.** `LiveWallpaper.openPicker()` opens the system's preview of the wallpaper,
 where the user applies it. Users can also find it in their wallpaper settings.
 
+## Guides
+
+Step by step, with complete code:
+
+- [Getting started](https://github.com/sharpsan/wallflower/blob/main/doc/getting-started.md):
+  from `flutter create` to a wallpaper on your home screen.
+- [Writing scenes](https://github.com/sharpsan/wallflower/blob/main/doc/scenes.md): parallax,
+  launcher zoom, visibility and battery, the lock screen, and Material You colors.
+- [Motion and touch](https://github.com/sharpsan/wallflower/blob/main/doc/motion-and-touch.md):
+  device tilt, taps and launcher commands.
+- [The app and the wallpaper](https://github.com/sharpsan/wallflower/blob/main/doc/app-and-wallpaper.md):
+  settings, messages, and several wallpapers in one app.
+- [Testing and previews](https://github.com/sharpsan/wallflower/blob/main/doc/testing.md): widget
+  tests, and showing a scene inside your app.
+
+The rest of this page is a quick reference.
+
 ## Usage
 
 ### The scene

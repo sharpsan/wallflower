@@ -24,3 +24,5 @@ First release: Android live wallpapers built from Flutter widgets.
   forwarded.
 * Example: a wallpaper with parallax, particles and clock scenes, and a settings app that switches
   them live.
+* Guides in `doc/`: getting started, writing scenes, motion and touch, the app and the wallpaper,
+  and testing and previews.
