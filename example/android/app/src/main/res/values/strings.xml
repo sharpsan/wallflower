@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wallpaper_label">Wallflower demo</string>
+    <string name="wallpaper_description">Mountains with parallax, a field of particles that ripples where you tap, or a minimal clock, all built from Flutter widgets. Pick one in the settings.</string>
+</resources>

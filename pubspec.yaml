@@ -1,0 +1,41 @@
+name: wallflower
+description: >-
+  Live wallpapers for Android built from Flutter widgets. Render any widget
+  tree as an animated home screen wallpaper with parallax and tilt.
+version: 0.1.0
+repository: https://github.com/sharpsan/wallflower
+
+environment:
+  sdk: ^3.12.0
+  flutter: '>=3.44.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+topics:
+  - wallpaper
+  - live-wallpaper
+  - android
+  - widget
+  - animation
+
+screenshots:
+  - description: Layered parallax live wallpaper moving with home screen swipes on Android.
+    path: doc/screenshots/parallax.webp
+  - description: Particle field live wallpaper rippling where you tap the home screen.
+    path: doc/screenshots/particles.webp
+  - description: Minimal clock live wallpaper whose colors switch the system to dark text.
+    path: doc/screenshots/clock.webp
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: app.sharpsan.wallflower
+        pluginClass: LiveWallpaperPlugin

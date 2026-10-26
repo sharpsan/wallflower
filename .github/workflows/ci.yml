@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: Flutter ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Beta catches embedding API changes before they reach stable.
+          - { name: stable, channel: stable, version: '' }
+          - { name: beta, channel: beta, version: '' }
+          # The lowest version pubspec.yaml allows.
+          - { name: '3.44 (minimum)', channel: stable, version: 3.44.x }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ matrix.channel }}
+          flutter-version: ${{ matrix.version }}
+          cache: true
+      - run: flutter pub get
+      - name: Format
+        if: matrix.name == 'stable'
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+      - name: Analyze and test the example
+        working-directory: example
+        run: flutter analyze && flutter test
+      - name: Analyze at dependency lower bounds
+        if: matrix.name == 'stable'
+        run: flutter pub downgrade && flutter analyze && flutter pub upgrade
+      - name: Build the example APK
+        working-directory: example
+        run: flutter build apk --debug
+      # Runs after the build, which provides the Gradle wrapper.
+      - name: Kotlin unit tests
+        working-directory: example/android
+        run: ./gradlew :wallflower:testDebugUnitTest
+      - name: Publish dry run
+        if: matrix.name == 'stable'
+        run: flutter pub publish --dry-run
+
+  pana:
+    name: Pub points
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # pana checks the pubspec screenshots with the WebP tools.
+      - run: sudo apt-get update && sudo apt-get install -y webp
+      - run: dart pub global activate pana
+      # Fails unless the package scores full points.
+      - run: dart pub global run pana --exit-code-threshold 0 --no-warning .

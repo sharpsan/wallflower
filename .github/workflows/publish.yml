@@ -1,0 +1,33 @@
+# Publishes to pub.dev when a version tag such as v0.2.0 is pushed. pub.dev must have automated
+# publishing enabled for this repository, with the tag pattern v{{version}} and the pub.dev
+# environment required. Give that GitHub environment a required reviewer so releases need approval.
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Waits for a required reviewer's approval.
+    environment: pub.dev
+    permissions:
+      id-token: write # OIDC authentication with pub.dev
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the tag matches pubspec.yaml
+        run: |
+          version=$(sed -n 's/^version: *//p' pubspec.yaml)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME doesn't match version $version in pubspec.yaml."
+            exit 1
+          fi
+      # Sets up pub.dev's OIDC credentials.
+      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter pub publish --force
