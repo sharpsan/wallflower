@@ -157,7 +157,7 @@ Tap **Set as wallpaper** and apply the wallpaper in Android's preview, choosing 
 both screens if asked. Then swipe between home screen pages: the sun drifts.
 
 Debug builds take a few seconds to show the wallpaper, because the engine compiles Dart code as it
-starts. Profile and release builds show it at once:
+starts. Profile and release builds show it at once; apply the wallpaper again after running one:
 
 ```sh
 flutter run --release
@@ -168,8 +168,10 @@ option in its settings.
 
 ## 6. Work on the scene
 
-The wallpaper picks up code changes when the app is reinstalled, such as by running `flutter run`
-again. Android keeps it applied across updates.
+The wallpaper runs the installed code, so it picks up changes when you reinstall the app. But
+`flutter run` force-stops the app as it starts and when you quit with `q`, and Android removes the
+live wallpaper of a force-stopped app. Apply the wallpaper again after each `flutter run`, and
+press `d` to detach instead of quitting. Updates installed with `adb install -r` keep it applied.
 
 For faster changes, run the scene on its own, with hot reload. Add `lib/scene_dev.dart`:
 
@@ -182,9 +184,9 @@ import 'main.dart';
 void main() => runWallpaper(const DriftingSky());
 ```
 
-The wallpaper looks for `wallpaperMain` in the file `flutter run` builds, so it can't find it
-while you run `scene_dev.dart`. Name the file that declares it, in the manifest's `<service>`
-element:
+The wallpaper looks for `wallpaperMain` in the file `flutter run` builds, so while a build of
+`scene_dev.dart` is installed, it can't find it. Name the file that declares it, in the manifest's
+`<service>` element:
 
 ```xml
 <meta-data android:name="wallflower.entrypointLibrary" android:value="package:drifting_sky/main.dart" />

@@ -15,7 +15,7 @@ wallpaper, so an animated wallpaper is just a widget.
 
 ## Features
 
-- **Any widget as the wallpaper**, rendered by Impeller on Vulkan or OpenGL ES.
+- **Any widget as the wallpaper**, drawn by the same renderer as your app.
 - **Parallax** that follows home screen swipes and **device tilt**.
 - **Taps and launcher zoom**: pointer events, taps on empty home screen space, and the zoom as
   the app drawer opens.
@@ -282,8 +282,9 @@ A live wallpaper is on screen whenever the home screen is, so its cost adds up.
   In profile and release builds on a Pixel 10 Pro, the first frame appeared 30–110 ms after the
   wallpaper's surface did.
 - **The wallpaper reset to the system default.** Android removes a live wallpaper when its app is
-  force-stopped (including from the app info screen), uninstalled, or crashes repeatedly. Updating
-  the app keeps it.
+  force-stopped, uninstalled, or crashes repeatedly. `flutter run` force-stops the app when it
+  starts and when you quit with `q`; detach with `d` instead. Updating the app any other way keeps
+  the wallpaper.
 - **Tilt stays at zero.** Tilt measures movement away from how the phone is held, so it returns to
   zero whenever the phone is still. Devices and emulators without a motion sensor always report
   zero.
