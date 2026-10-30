@@ -1,7 +1,7 @@
 # Writing scenes
 
 A scene is the widget you pass to `runWallpaper`. This guide covers reading the wallpaper's state,
-keeping a scene cheap to run, and fitting in with the rest of the system.
+keeping a scene cheap to run, and fitting in with the system.
 
 ## What a scene runs in
 
@@ -15,14 +15,14 @@ There's no `MaterialApp` or `WidgetsApp`. If the scene needs Material widgets, t
 localizations, add a `MaterialApp` inside it. Plain widgets such as `Text` work without one; wrap
 them in a `DefaultTextStyle` to set the font and color.
 
-`MediaQuery` works as in an app: the screen size, the status bar and navigation bar padding,
-display cutouts and rounded corners, dark mode, text scaling and the locale. `SafeArea` keeps
-content clear of the status bar and the navigation bar.
+`MediaQuery` works as in an app, with the screen size, system bar padding, display cutouts,
+rounded corners, dark mode, text scaling and locale. `SafeArea` keeps content clear of the system
+bars.
 
 ## Reading the wallpaper's state
 
 Read state the way you read `MediaQuery`. Each of these methods rebuilds the caller only when its
-own value changes:
+own value changes, except that `pageOffsetOf` and `pageStepOf` both rebuild when either changes:
 
 | Method | Returns |
 |---|---|
@@ -35,12 +35,12 @@ own value changes:
 | `Wallpaper.configOf(context)` | The settings the app saved for the wallpaper. |
 
 `Wallpaper.of(context)` returns all of them as one `WallpaperData`, and rebuilds the caller when
-any of them changes. Page offsets change every frame during a swipe, so a widget that needs only
+any of them changes. Page offsets change every frame of a swipe, so a widget that needs only
 visibility should call `visibleOf`.
 
 With five home screen pages, `pageOffset.dx` is 0 on the first page, 0.25 on the second and 1 on
-the last; `pageStep.dx` is 0.25, and `WallpaperData.pageCount` is 5. Both are 0 when the launcher
-doesn't report them.
+the last. `pageStep.dx` is 0.25 and `WallpaperData.pageCount` is 5. When the launcher doesn't
+report pages, the step is 0 and the count is 1.
 
 ## Parallax
 
@@ -120,16 +120,14 @@ class Hill extends StatelessWidget {
 }
 ```
 
-The layers rebuild on every frame of a swipe, but they're cheap: each builds a translation, and the
-`RepaintBoundary` lets Flutter move the already painted layer instead of painting it again.
+The layers rebuild on every frame of a swipe, but that's cheap: each only changes a translation.
 
 Parallax can follow device tilt too; see [Motion and touch](motion-and-touch.md).
 
 ## Launcher zoom
 
-Launchers zoom the wallpaper out slightly when they open the app drawer or the recents screen
-(Android 11 and later). Android's own image wallpaper shows this by scaling, and a scene can do
-the same:
+On Android 11 and later, launchers zoom the wallpaper out slightly for the app drawer and the
+recents screen. Android's own image wallpaper scales with the zoom, and a scene can do the same:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -153,9 +151,9 @@ class LauncherZoom extends StatelessWidget {
 
 A live wallpaper is on screen whenever the home screen is, so a scene's cost adds up over a day.
 
-While the wallpaper is hidden, by an app or with the screen off, the engine draws no frames.
-Animations, tickers and `AnimationController`s stop on their own. Dart timers, stream
-subscriptions and network requests keep running, so stop them while the wallpaper is hidden:
+While the wallpaper is hidden, behind an app or with the screen off, the engine draws no frames,
+so animations stop on their own. Timers, stream subscriptions and network requests keep running,
+so stop them yourself:
 
 ```dart
 import 'dart:async';
@@ -227,22 +225,22 @@ class _ClockState extends State<Clock> {
 }
 ```
 
-While visible, prefer animations that end:
+While the wallpaper is visible:
 
-- **Scenes that change only with input draw nothing in between.** A scene that moves only with
-  swipes, tilt or taps costs almost nothing while the user isn't touching the phone.
+- **Let input drive the scene.** A scene that moves only with swipes, tilt or taps draws nothing
+  in between.
 - **Run animations once, not forever.** Start an `AnimationController` with `forward()` when
-  something happens, and let it stop. An animation that repeats forever draws 60 frames or more a
-  second, the whole time the home screen is up. The README's
+  something happens, and let it stop. An animation that repeats forever draws every frame the
+  whole time the home screen is up; the README's
   [Battery](https://github.com/sharpsan/wallflower#battery) section has measurements.
 - **Paint layers once.** Wrap layers that only move in a `RepaintBoundary`, as in the parallax
   example.
 
 ## The picker preview and the lock screen
 
-While the user looks at the wallpaper in the picker, a second copy of it runs for the preview,
-alongside the applied wallpaper if there is one. `Wallpaper.isPreviewOf(context)` is true in the
-preview. Use it to skip an intro animation, for example, or to show what the wallpaper does.
+The picker runs a second copy of the wallpaper for its preview, alongside the applied wallpaper
+if there is one. `Wallpaper.isPreviewOf(context)` is true in the preview. Use it to skip an intro
+animation, for example, or to show what the wallpaper can do.
 
 On Android 14 and later, users can apply a live wallpaper to the home screen, the lock screen or
 both, and `Wallpaper.targetOf(context)` says which:
@@ -274,9 +272,9 @@ tell which screen is showing. Before Android 14, the target is `unknown`.
 
 ## Colors for Material You
 
-Android picks the system theme's colors from the wallpaper when the user's theme follows it, and
-chooses light or dark status bar icons to suit it. Tell it the scene's colors with
-`Wallpaper.reportColors`, when the scene starts and whenever its look changes:
+When the user's theme follows the wallpaper, Android takes the system colors from it. It also
+picks light or dark status bar icons to suit the wallpaper. Report the scene's colors with
+`Wallpaper.reportColors` when it starts and whenever its look changes:
 
 ```dart
 import 'dart:async';

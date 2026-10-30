@@ -1,17 +1,16 @@
 # Testing and previews
 
-`WallpaperScope` provides wallpaper state to the widgets below it. `runWallpaper` adds one with the
-real state; add your own to drive a scene with made-up state in widget tests, or to show a scene
-inside your app.
+`runWallpaper` provides the wallpaper's state to the scene through a `WallpaperScope`. Add your own
+scope to drive a scene with made-up state, in widget tests or in a preview inside your app.
 
-A `WallpaperScope` takes a `ValueListenable<WallpaperData>` as `data`, and optionally a
-`ValueListenable<Offset>` as `tilt`, the value `WallpaperTilt.of` returns. Change their values and
-the scene sees the change, as it would see a swipe, a tilt or the app saving a new config.
+A `WallpaperScope` takes a `ValueListenable<WallpaperData>` as `data` and, optionally, a
+`ValueListenable<Offset>` as `tilt`. Change their values and the scene reacts as it would to a
+swipe, a tilt or a new config.
 
 ## Widget tests
 
-A test needs what `runWallpaper` would otherwise provide: a `WallpaperScope` and a
-`Directionality`. This file tests a small scene, and checks that its animation ends:
+A test needs what `runWallpaper` would provide: a `WallpaperScope` and a `Directionality`. This
+file tests a small scene, and checks that its animation ends:
 
 ```dart
 // test/scene_test.dart
@@ -74,8 +73,8 @@ void main() {
 }
 ```
 
-`pumpAndSettle` is a useful check for every scene: an animation that never ends draws frames the
-whole time the home screen is up. Run it after each kind of input the scene reacts to.
+`pumpAndSettle` makes a good check for every scene, since an animation that never ends draws
+frames the whole time the home screen is up. Run it after each kind of input the scene reacts to.
 
 ### Tilt
 
@@ -184,12 +183,12 @@ void main() {
 }
 ```
 
-Pointer events work in tests as usual, with `tester.tapAt` and `tester.drag`.
+Pointer events work as usual, with `tester.tapAt` and `tester.drag`.
 
 ## Previews in the app
 
 The same scope shows a scene inside the app, for example next to its settings. This preview draws
-the scene in a phone-shaped box, on a chosen page and with the config being edited:
+the scene in a phone-shaped box, on a given page and with a given config:
 
 ```dart
 // lib/scene_preview.dart
@@ -269,16 +268,16 @@ class _ScenePreviewState extends State<ScenePreview> {
 }
 ```
 
-Hot reload works on previews, since they're ordinary widgets in the app. To try other launcher
-behavior, drive `pageOffset` from a drag on the preview, the way the example app does.
+Hot reload works on previews, since they're ordinary widgets. To mimic swipes, drive `pageOffset`
+from a drag on the preview, as the example app does.
 
 ## On a device
 
 To see the scene full screen without setting it as the wallpaper, run an entrypoint that calls
-`runWallpaper` directly, as described in [Getting started](getting-started.md#6-work-on-the-scene).
+`runWallpaper` directly; see [Getting started](getting-started.md#6-work-on-the-scene).
 
-To open the wallpaper picker on your wallpaper without going through the app, replace
-`com.example.drifting_sky` with your application ID:
+To open the picker on your wallpaper without going through the app, run this with your application
+ID in place of `com.example.drifting_sky`:
 
 ```sh
 adb shell am start -a android.service.wallpaper.CHANGE_LIVE_WALLPAPER \
@@ -286,5 +285,5 @@ adb shell am start -a android.service.wallpaper.CHANGE_LIVE_WALLPAPER \
   com.example.drifting_sky/app.sharpsan.wallflower.FlutterWallpaperService
 ```
 
-The wallpaper logs under the tags `flutter` and `Wallflower`: `adb logcat -s flutter Wallflower`.
-Judge smoothness and startup time in profile or release builds, not debug builds.
+`adb logcat -s flutter Wallflower` shows the wallpaper's logs. Judge smoothness and startup time
+in profile or release builds, not debug builds.

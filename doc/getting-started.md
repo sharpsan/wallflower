@@ -1,8 +1,7 @@
 # Getting started
 
 This guide turns a new Flutter app into a live wallpaper: a dusk sky whose sun drifts as you swipe
-between home screen pages. You need an Android device or emulator with Android 7.0 (API 24) or
-later.
+between home screen pages. You need a device or emulator with Android 7.0 (API 24) or later.
 
 ## 1. Create the app
 
@@ -14,12 +13,11 @@ flutter pub add wallflower
 
 ## 2. Declare the wallpaper service
 
-Android runs live wallpapers as a `WallpaperService`. wallflower provides one,
-`FlutterWallpaperService`, which runs a Dart function from your app in a Flutter engine of its own
-and draws it as the wallpaper.
+Android runs live wallpapers as a `WallpaperService`. wallflower's `FlutterWallpaperService` runs
+a Dart function from your app in a Flutter engine of its own and draws it as the wallpaper.
 
-Open `android/app/src/main/AndroidManifest.xml`. Add the `<uses-feature>` element inside
-`<manifest>`, and the `<service>` element inside `<application>`, after the `<activity>`:
+In `android/app/src/main/AndroidManifest.xml`, add `<uses-feature>` inside `<manifest>`, and
+`<service>` inside `<application>`, after the `<activity>`:
 
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -45,8 +43,8 @@ Open `android/app/src/main/AndroidManifest.xml`. Add the `<uses-feature>` elemen
 </manifest>
 ```
 
-- `BIND_WALLPAPER` makes sure only the system can start the wallpaper.
-- `android.service.wallpaper` points to the description the wallpaper picker shows (step 3).
+- `BIND_WALLPAPER` lets only the system start the wallpaper.
+- `android.service.wallpaper` points to the wallpaper's description for the picker (step 3).
 - `wallflower.entrypoint` names the Dart function the wallpaper runs (step 4).
 - `required="false"` keeps the app installable on devices without live wallpapers.
 
@@ -71,9 +69,8 @@ and `android/app/src/main/res/values/strings.xml`:
 </resources>
 ```
 
-Wallpaper lists show the label, description and thumbnail. The app icon will do as a thumbnail
-for now. Later, put a screenshot of the wallpaper in `res/drawable-nodpi/` and point
-`android:thumbnail` at it.
+The picker shows the label, description and thumbnail. The app icon will do as a thumbnail for
+now; later, point `android:thumbnail` at a screenshot in `res/drawable-nodpi/`.
 
 ## 4. Write the wallpaper
 
@@ -87,8 +84,7 @@ import 'package:wallflower/wallflower.dart';
 /// The app: one screen with a button that sets the wallpaper.
 void main() => runApp(const MyApp());
 
-/// The wallpaper. Android starts it in a Flutter engine of its own and finds
-/// this function by the name in the `wallflower.entrypoint` meta-data.
+/// The wallpaper. Its name matches the `wallflower.entrypoint` meta-data.
 @pragma('vm:entry-point')
 void wallpaperMain() => runWallpaper(const DriftingSky());
 
@@ -97,8 +93,7 @@ class DriftingSky extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 0 on the first home screen page, 1 on the last. This widget rebuilds
-    // only when the page offset changes.
+    // 0 on the first home screen page, 1 on the last.
     final page = Wallpaper.pageOffsetOf(context).dx;
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -145,13 +140,12 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-The two entrypoints run apart. `main` runs the app as usual, and `wallpaperMain` runs in the
-wallpaper's own engine and Dart isolate while the wallpaper is applied, even when the app isn't
-open. `@pragma('vm:entry-point')` stops release builds from removing `wallpaperMain`, since no Dart
-code calls it.
+`main` runs the app as usual. `wallpaperMain` runs in the wallpaper's own engine and Dart isolate
+while the wallpaper is applied, even when the app isn't open. No Dart code calls it, so
+`@pragma('vm:entry-point')` keeps release builds from removing it.
 
-`runWallpaper` works like `runApp`, and `Wallpaper.pageOffsetOf` reads one piece of the
-wallpaper's state the way `MediaQuery.sizeOf` reads the screen size.
+`runWallpaper` works like `runApp`, and `Wallpaper.pageOffsetOf` reads the page offset the way
+`MediaQuery.sizeOf` reads the screen size.
 
 ## 5. Run it
 
@@ -159,9 +153,8 @@ wallpaper's state the way `MediaQuery.sizeOf` reads the screen size.
 flutter run
 ```
 
-Tap **Set as wallpaper**. Android opens its preview of the wallpaper. Apply it, choosing the home
-screen or both screens if asked, then go to the home screen and swipe between pages. The sun
-drifts as you swipe.
+Tap **Set as wallpaper** and apply the wallpaper in Android's preview, choosing the home screen or
+both screens if asked. Then swipe between home screen pages: the sun drifts.
 
 Debug builds take a few seconds to show the wallpaper, because the engine compiles Dart code as it
 starts. Profile and release builds show it at once:
@@ -170,15 +163,15 @@ starts. Profile and release builds show it at once:
 flutter run --release
 ```
 
-Not every launcher moves the wallpaper as you swipe. If the sun stays put, check the launcher's
-settings for a wallpaper scrolling option.
+If the sun stays put, the launcher may not scroll the wallpaper; look for a wallpaper scrolling
+option in its settings.
 
 ## 6. Work on the scene
 
-The wallpaper picks up new code when the app is installed again (`flutter run` again). Android
-keeps your wallpaper applied across updates.
+The wallpaper picks up code changes when the app is reinstalled, such as by running `flutter run`
+again. Android keeps it applied across updates.
 
-For faster changes, run the scene on its own with hot reload. Add `lib/scene_dev.dart`:
+For faster changes, run the scene on its own, with hot reload. Add `lib/scene_dev.dart`:
 
 ```dart
 // lib/scene_dev.dart
@@ -189,12 +182,19 @@ import 'main.dart';
 void main() => runWallpaper(const DriftingSky());
 ```
 
-and run it with `flutter run -t lib/scene_dev.dart`. Outside a wallpaper, `runWallpaper` shows the
-scene full screen as if it were visible, with every other value at its default. To try other
-values, such as a different page, use a `WallpaperScope`, described in
-[Testing and previews](testing.md).
+The wallpaper looks for `wallpaperMain` in the file `flutter run` builds, so it can't find it
+while you run `scene_dev.dart`. Name the file that declares it, in the manifest's `<service>`
+element:
 
-To see the wallpaper's logs, including `print` and `debugPrint` output, run:
+```xml
+<meta-data android:name="wallflower.entrypointLibrary" android:value="package:drifting_sky/main.dart" />
+```
+
+Then run `flutter run -t lib/scene_dev.dart`. Outside a wallpaper, `runWallpaper` shows the scene
+full screen as if visible, with every other value at its default. To try other values, such as
+another page, use a `WallpaperScope`; see [Testing and previews](testing.md#previews-in-the-app).
+
+To see the wallpaper's logs, including `print` and `debugPrint` output:
 
 ```sh
 adb logcat -s flutter Wallflower

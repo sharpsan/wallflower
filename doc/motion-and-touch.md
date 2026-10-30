@@ -1,13 +1,12 @@
 # Motion and touch
 
-A wallpaper can respond to the phone's movement and to touches on the home screen. This guide
-covers device tilt, pointer events and the commands launchers send.
+This guide covers device tilt, touches, and the commands launchers send.
 
 ## Device tilt
 
 `WallpaperTilt.of(context)` returns the device's tilt as an `Offset`, each axis from -1 to 1. `dx`
-grows as the right edge of the screen dips, and `dy` grows as the top edge tips away from the
-viewer. Shift layers against it for a sense of depth:
+grows as the right edge of the screen dips, and `dy` as the top edge tips away from the viewer.
+Shift layers against it for a sense of depth:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -32,19 +31,18 @@ class TiltShift extends StatelessWidget {
 ```
 
 Make shifted layers a little larger than the screen, for example with `Transform.scale`, so their
-edges never come into view.
+edges stay out of view.
 
-Tilt is measured from the way the phone is being held, not from level. When the phone settles at
-a new angle, the value drifts back to zero over a couple of seconds, so a scene re-centers by
-itself whether the user is standing, sitting or lying down.
+Tilt is measured from the way the phone is held, not from level. When the phone settles at a new
+angle, the value drifts back to zero over a couple of seconds, so the scene re-centers whether the
+user is standing, sitting or lying down.
 
 ### When the sensor runs
 
-The motion sensor runs only while the wallpaper is visible and at least one mounted widget has
-called `WallpaperTilt.of`. A widget keeps the sensor on until it unmounts, even if a later build
-stops reading tilt. So read tilt in a small widget of its own, and leave that widget out when the
-scene doesn't need tilt. (Outside the widget tree, a listener on `WallpaperTilt.listenable` keeps
-the sensor on instead.)
+The motion sensor runs only while the wallpaper is visible and something reads tilt: a mounted
+widget that has called `WallpaperTilt.of`, or a listener on `WallpaperTilt.listenable`. A widget
+keeps the sensor on until it unmounts, even if it stops reading tilt. So read tilt in a small
+widget of its own, and leave that widget out when the scene doesn't need tilt:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -79,14 +77,14 @@ class _TiltReader extends StatelessWidget {
 Every sample rebuilds the widgets that read tilt, so read it as low in the tree as you can, in the
 widgets that move.
 
-While the phone lies still, the sensor drops to 10 samples a second until it moves again. On a
-Pixel 10 Pro, a static scene that read tilt used under 1% of a CPU core while the phone rested.
-Devices and emulators without a motion sensor always report zero.
+While the phone lies still, the sensor drops to 10 samples a second. On a Pixel 10 Pro, a static
+scene reading tilt then used under 1% of a CPU core. Devices and emulators without a motion sensor
+always report zero.
 
 ### Tilt settings
 
-`WallpaperTilt.settings` controls how the sensor samples and how its values are filtered. Set it
-in the entrypoint, after `runWallpaper`:
+`WallpaperTilt.settings` controls sampling and filtering. Set it in the entrypoint, after
+`runWallpaper`:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -124,10 +122,9 @@ class TiltScene extends StatelessWidget {
 ## Touch
 
 Touches on the home screen reach the wallpaper as ordinary pointer events, so `Listener` and
-`GestureDetector` work. The wallpaper sees every touch on the home screen, including swipes
-between pages and touches on icons and widgets, which the launcher handles as well.
-
-To react only to taps on empty parts of the home screen, use the launcher's commands.
+`GestureDetector` work. The wallpaper sees every touch, including swipes between pages and touches
+on icons and widgets, which the launcher also handles. To react only to taps on empty space, use
+launcher commands.
 
 ## Launcher commands
 
@@ -135,15 +132,15 @@ Launchers and the system send commands on `Wallpaper.commands`, a broadcast stre
 
 | Command | Sent when |
 |---|---|
-| `WallpaperCommand.tap` | The user taps an empty part of the home screen. Not for taps on icons, and not for swipes. |
+| `WallpaperCommand.tap` | The user taps an empty part of the home screen (not an icon, and not a swipe). |
 | `WallpaperCommand.secondaryTap` | A secondary tap, such as with a second finger. |
 | `WallpaperCommand.drop` | The user drops an item, such as an icon, on the home screen. |
 | `WallpaperCommand.wakingUp` | The screen turns on. Pixel devices send it; others may not. |
 | `WallpaperCommand.goingToSleep` | The screen turns off. Pixel devices send it; others may not. |
 
 `WallpaperCommand.position` is where it happened, in logical pixels. Launchers compute it their
-own way, and on Pixel Launcher it can be several percent away from the actual touch. For an exact
-position, pair a tap command with the pointer event from the same tap:
+own way, and Pixel Launcher's can be several percent off. For an exact position, pair a tap
+command with the pointer event from the same tap:
 
 ```dart
 import 'dart:async';
@@ -240,5 +237,5 @@ class _RingPainter extends CustomPainter {
 
 The animation runs once per tap and then stops, so the scene draws nothing between taps.
 
-Commands arrive only in a running wallpaper. In widget tests and in-app previews, nothing sends
-them; [Testing and previews](testing.md) shows how to feed taps to a scene there.
+Only a running wallpaper receives commands. To feed them to a scene in tests, see
+[Testing and previews](testing.md#launcher-commands).

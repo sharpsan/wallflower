@@ -237,7 +237,7 @@ abstract final class WallpaperTilt {
   static Offset of(BuildContext context) => TiltModel.of(context);
 
   /// The current tilt outside the widget tree, for example in a game loop.
-  /// The sensor runs while it has listeners.
+  /// The sensor runs while it has listeners and the wallpaper is visible.
   static ValueListenable<Offset> get listenable => _controller;
 
   /// How the sensor samples and how values are filtered.

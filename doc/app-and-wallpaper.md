@@ -2,11 +2,11 @@
 
 Your app and its wallpaper run the same Dart code, but in separate Flutter engines and Dart
 isolates, and the wallpaper keeps running while the app is closed. They share no Dart state: a
-static field set in the app isn't set in the wallpaper. They exchange data in two ways:
+static field set in the app isn't set in the wallpaper. Instead they share:
 
-- **The config** holds settings. It's saved on the device, the wallpaper reads it as soon as it
-  starts, and changes reach a running wallpaper immediately.
-- **Messages** are one-off events, delivered to whatever is running at that moment.
+- **The config**, for settings. It's saved on the device, the wallpaper reads it when it starts,
+  and changes reach a running wallpaper immediately.
+- **Messages**, for one-off events, delivered to whatever is running at the moment.
 
 This guide also covers setting the wallpaper from the app, and offering several wallpapers from
 one app.
@@ -104,7 +104,7 @@ class Sky extends StatelessWidget {
 ```
 
 A config is a map of JSON values: null, bools, numbers, strings, lists and maps with string keys.
-`setConfig` replaces the whole map, and an empty map clears it. Each save reaches the wallpaper,
+`setConfig` replaces the whole map, and an empty map clears it. Every save reaches the wallpaper,
 so for a slider, save in `onChangeEnd` rather than on every change.
 
 To show the scene in the app with the config being edited, see
@@ -112,12 +112,12 @@ To show the scene in the app with the config being edited, see
 
 ## Messages
 
-`LiveWallpaper.send` sends a message from the app to the running wallpaper, which receives it on
-`Wallpaper.messages`. `Wallpaper.sendToApp` sends one back, and the app receives it on
-`LiveWallpaper.messages`. Both sends return how many receivers got the message: 0 when nothing is
-running on the other side.
+The app sends with `LiveWallpaper.send`, and the wallpaper receives on `Wallpaper.messages`. The
+wallpaper replies with `Wallpaper.sendToApp`, and the app receives on `LiveWallpaper.messages`.
+Both sends return how many Flutter engines received the message: 0 if nothing is running on the
+other side.
 
-Here the app asks the wallpaper which sky it shows. On the wallpaper side:
+Here the app asks the wallpaper which sky it shows. The wallpaper side:
 
 ```dart
 import 'dart:async';
@@ -161,7 +161,7 @@ class _StatusResponderState extends State<StatusResponder> {
 }
 ```
 
-And in the app:
+The app side:
 
 ```dart
 import 'dart:async';
@@ -212,15 +212,15 @@ class _WallpaperStatusState extends State<WallpaperStatus> {
 }
 ```
 
-Message data takes the same JSON values as a config. Messages aren't stored: a message sent while
-nothing is running on the other side is dropped. Use the config for anything the wallpaper needs
-when it starts.
+Message data takes the same JSON values as a config. Messages aren't stored, so use the config for
+anything the wallpaper needs when it starts.
 
 ## Setting the wallpaper from the app
 
 `LiveWallpaper.openPicker()` opens the system's preview of the wallpaper, where the user applies
-it. Where there's no such preview, it opens the list of live wallpapers instead, and it returns
-false if the device has neither.
+it. On devices without that preview, it opens the list of live wallpapers instead, and it returns
+false if there's neither.
+
 `LiveWallpaper.isActive()` says whether the wallpaper is applied, to the home screen or the lock
 screen. Check again when the user comes back from the picker:
 
@@ -271,8 +271,8 @@ class _SetWallpaperTileState extends State<SetWallpaperTile> {
 }
 ```
 
-To put a settings button in the wallpaper picker, name an activity in `res/xml/wallpaper.xml`.
-The app's `MainActivity` works:
+To put a settings button in the wallpaper picker, name an exported activity in
+`res/xml/wallpaper.xml`, by its full class name. The app's `MainActivity` works:
 
 ```xml
 <wallpaper xmlns:android="http://schemas.android.com/apk/res/android"
@@ -297,7 +297,8 @@ class SkyWallpaperService : FlutterWallpaperService()
 class OceanWallpaperService : FlutterWallpaperService()
 ```
 
-Declare each one in `AndroidManifest.xml`, with its own label, description and entrypoint:
+Declare them in `AndroidManifest.xml` in place of the `FlutterWallpaperService` entry, each with
+its own label, description and entrypoint:
 
 ```xml
 <service
@@ -325,7 +326,9 @@ Declare each one in `AndroidManifest.xml`, with its own label, description and e
 </service>
 ```
 
-Add an entrypoint for each in `lib/main.dart`:
+Create the descriptions (`res/xml/sky_wallpaper.xml` and `res/xml/ocean_wallpaper.xml`) and
+strings as in [Getting started](getting-started.md#3-describe-the-wallpaper). Then add an
+entrypoint for each in `lib/main.dart`:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -338,8 +341,8 @@ void skyMain() => runWallpaper(const Sky());
 void oceanMain() => runWallpaper(const ColoredBox(color: Color(0xFF0E4D64)));
 ```
 
-In the app, pass `service:` to `LiveWallpaper` to pick one, by its simple or fully qualified class
-name:
+In the app, pass `service:` to `LiveWallpaper` methods to pick one, by simple or fully qualified
+class name:
 
 ```dart
 import 'package:wallflower/wallflower.dart';
@@ -351,16 +354,17 @@ Future<void> setUpOcean() async {
 ```
 
 Each service has its own config. Without `service:`, `setConfig`, `send` and `isActive` apply to
-all of the app's wallpapers, and `getConfig` and `openPicker` use the first one.
+all of the app's wallpapers, and `getConfig` and `openPicker` use the first one. A `service:` that
+matches no declared service throws a `PlatformException`.
 
 A subclass can also override `getFallbackColor()`, the color drawn if the Flutter engine fails to
 start, which is black by default.
 
 ### Entrypoints in another file
 
-Entrypoints are looked up in the app's main library unless the service says otherwise. To keep
-them in another file, add its URI as meta-data, and import that file from `lib/main.dart` so it's
-part of the app:
+Entrypoints are looked up in the file `flutter run` builds, normally `lib/main.dart`. To keep them
+in another file, add its URI to the service's meta-data, and import the file from `lib/main.dart`
+so it's part of the app:
 
 ```xml
 <meta-data android:name="wallflower.entrypointLibrary" android:value="package:drifting_sky/wallpapers.dart" />

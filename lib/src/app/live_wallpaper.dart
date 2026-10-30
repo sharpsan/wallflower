@@ -14,6 +14,9 @@ import '../messages.dart';
 /// simple (`Ocean`) names both work. Without it, a method applies to all of
 /// the app's wallpaper services ([openPicker] and [getConfig] use the first).
 ///
+/// Every method throws a `PlatformException` if the manifest declares no
+/// matching wallpaper service.
+///
 /// Android only. Call these from the app, not from the wallpaper's isolate.
 abstract final class LiveWallpaper {
   static const MethodChannel _channel = MethodChannel('wallflower/app');
